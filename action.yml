@@ -31,6 +31,12 @@ inputs:
     description: 'Build context path'
     required: false
     default: '.'
+  build_args:
+    description: 'Build arguments in the format KEY=VALUE,KEY2=VALUE2'
+    required: false
+  build_secrets:
+    description: 'Build secrets in the format KEY=VALUE,KEY2=VALUE2'
+    required: false
   railway_token:
     description: 'Railway deployment token'
     required: false
@@ -107,6 +113,8 @@ runs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        build-args: ${{ inputs.build_args }}
+        secrets: ${{ inputs.build_secrets }}
 
     - name: Deploy to Railway
       if: inputs.railway_token != '' && inputs.railway_service_id != '' && inputs.railway_environment_id != ''

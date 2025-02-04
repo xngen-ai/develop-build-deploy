@@ -72,6 +72,8 @@ jobs:
 - `version_increment`: Version increment type (patch/minor/major) (default: 'patch')
 - `dockerfile_path`: Path to the Dockerfile (default: './Dockerfile')
 - `context_path`: Build context path (default: '.')
+- `build_args`: Build arguments in the format KEY=VALUE,KEY2=VALUE2 (optional)
+- `build_secrets`: Build secrets in the format KEY=VALUE,KEY2=VALUE2 (optional)
 - `railway_token`: Railway deployment token (optional)
 - `railway_service_id`: Railway service ID (optional)
 - `railway_environment_id`: Railway environment ID (optional)
@@ -145,6 +147,16 @@ jobs:
           dockerfile_path: ./Dockerfile
           context_path: .
           
+          # Build arguments and secrets (optional)
+          build_args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_AI_ENGINE_API_URL=${{ secrets.NEXT_PUBLIC_AI_ENGINE_API_URL }}
+          build_secrets: |
+            "CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}"
+            "CLERK_WEBHOOK_SECRET=${{ secrets.CLERK_WEBHOOK_SECRET }}"
+            "STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}"
+          
           # Railway deployment configuration (optional)
           railway_token: ${{ secrets.RAILWAY_BEARER }}
           railway_service_id: ${{ secrets.RW_SERVICE_ID }}
@@ -167,12 +179,27 @@ Note: `GITHUB_TOKEN` is automatically provided by GitHub Actions.
 ```dockerfile
 FROM node:18-alpine
 
+# Define build arguments
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_AI_ENGINE_API_URL
+
+# Define secrets
+RUN --mount=type=secret,id=CLERK_SECRET_KEY \
+    --mount=type=secret,id=CLERK_WEBHOOK_SECRET \
+    --mount=type=secret,id=STRIPE_SECRET_KEY
+
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+# Set environment variables
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_AI_ENGINE_API_URL=$NEXT_PUBLIC_AI_ENGINE_API_URL
 
 EXPOSE 3000
 CMD ["npm", "start"]
