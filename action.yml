@@ -46,6 +46,10 @@ inputs:
   railway_environment_id:
     description: 'Railway environment ID'
     required: false
+  branch_name:
+    description: 'Branch name to build from (affects tags and versioning)'
+    required: false
+    default: 'develop'
 
 runs:
   using: "composite"
@@ -94,7 +98,7 @@ runs:
         images: ${{ steps.image_info.outputs.IMAGE_FULL_NAME }}
         tags: |
           type=raw,value=v${{ steps.version.outputs.version }}
-          type=raw,value=dev-latest
+          type=raw,value=${{ inputs.branch_name == 'main' && 'latest' || 'dev-latest' }}
         labels: |
           org.opencontainers.image.title=${{ inputs.image_title }}
           org.opencontainers.image.description=${{ inputs.image_description }}
