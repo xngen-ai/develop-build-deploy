@@ -63,9 +63,9 @@ runs:
       uses: reecetech/version-increment@2024.4.3
       id: version
       with:
-        release_branch: main
+        # Always use the current branch as the release branch to get a normal version without -pre suffix
+        release_branch: ${{ github.ref_name }}
         increment: ${{ inputs.version_increment }}
-        tag_prefix: ${{ inputs.deploy_env == 'prod' && '' || (inputs.deploy_env == 'staging' && 'pre-' || 'dev') }}
 
     - name: Get Git commit and build date
       id: git_info
