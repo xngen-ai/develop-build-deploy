@@ -46,10 +46,10 @@ inputs:
   railway_environment_id:
     description: 'Railway environment ID'
     required: false
-  branch_name:
-    description: 'Branch name to build from (affects tags and versioning)'
+  deploy_env:
+    description: 'Deployment environment (affects tags and versioning)'
     required: false
-    default: 'develop'
+    default: 'dev'
 
 runs:
   using: "composite"
@@ -63,9 +63,8 @@ runs:
       uses: reecetech/version-increment@2024.4.3
       id: version
       with:
-        release_branch: main
-        scheme: semver
         increment: ${{ inputs.version_increment }}
+        tag_prefix: ${{ inputs.deploy_env == 'prod' && '' || (inputs.deploy_env == 'staging' && 'pre-' || 'dev-') }}
 
     - name: Get Git commit and build date
       id: git_info
@@ -79,7 +78,8 @@ runs:
       shell: bash
       run: |
         echo "IMAGE_FULL_NAME=${{ inputs.registry }}/${{ inputs.org_name }}/${{ inputs.image_name }}" >> $GITHUB_OUTPUT
-        echo "IMAGE_TAG=v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+        
+        echo "IMAGE_TAG=v${{ steps.version.outputs.prefixed-version }}" >> $GITHUB_OUTPUT
 
     - name: Log in to the Container registry
       uses: docker/login-action@v3
@@ -97,8 +97,8 @@ runs:
       with:
         images: ${{ steps.image_info.outputs.IMAGE_FULL_NAME }}
         tags: |
-          type=raw,value=v${{ steps.version.outputs.version }}
-          type=raw,value=${{ inputs.branch_name == 'main' && 'latest' || 'dev-latest' }}
+          type=raw,value=${{ steps.image_info.outputs.IMAGE_TAG }}
+          type=raw,value=${{ inputs.deploy_env == 'prod' && 'latest' || (inputs.deploy_env == 'staging' && 'stag-latest') || 'dev-latest' }}
         labels: |
           org.opencontainers.image.title=${{ inputs.image_title }}
           org.opencontainers.image.description=${{ inputs.image_description }}

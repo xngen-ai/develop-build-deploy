@@ -84,6 +84,8 @@ jobs:
 - `railway_token`: Railway deployment token (optional)
 - `railway_service_id`: Railway service ID (optional)
 - `railway_environment_id`: Railway environment ID (optional)
+- `deploy_env`: Deployment environment (affects tags and versioning) (default: 'dev')
+  - Valid values: 'dev', 'staging', 'prod'
 
 ## Secrets
 
@@ -168,6 +170,13 @@ jobs:
           railway_token: ${{ secrets.RAILWAY_BEARER }}
           railway_service_id: ${{ secrets.RW_SERVICE_ID }}
           railway_environment_id: ${{ secrets.RW_ENVIRONMENT_ID }}
+          
+          # Deployment environment configuration (optional)
+          # Use different environments based on branch
+          # - For develop branch: 'dev' (default)
+          # - For main branch pre-releases: 'staging'
+          # - For production releases: 'prod'
+          deploy_env: ${{ github.ref == 'refs/heads/main' && 'staging' || 'dev' }}
 ```
 
 ### Repository Secrets Configuration
@@ -218,4 +227,18 @@ CMD ["npm", "start"]
 - Railway deployment is optional and will only be executed if all Railway-related inputs are provided
 - Version incrementing follows semantic versioning (MAJOR.MINOR.PATCH)
 - The workflow can be triggered either by pushing to main/develop branches or manually through the GitHub Actions UI
-- The container image will be available at: `ghcr.io/my-organization/my-backend-app:v1.0.0`
+- The container image will be available at: `ghcr.io/my-organization/my-backend-app:<tag>` where `<tag>` depends on the `deploy_env` input
+- Tagging strategy by environment:
+  - Development (`deploy_env: 'dev'`): `dev-v1.0.0` and `dev-latest`
+  - Staging (`deploy_env: 'staging'`): `pre-v1.0.0` and `stag-latest`
+  - Production (`deploy_env: 'prod'`): `v1.0.0` and `latest`
+- The action leverages the `tag_prefix` input of the `reecetech/version-increment` action to handle version prefixing automatically
+
+## Production Promotion Workflow
+
+For promoting pre-release builds to production, we recommend using a separate workflow. An example is provided in the `examples/production-promotion.yml` file, which allows you to manually trigger a promotion of a specific pre-release image tag to production with an empty tag prefix.
+
+This approach allows you to:
+1. Build and test with development tags (`dev-`) on the develop branch
+2. Create pre-release builds (`pre-`) on the main branch
+3. Manually promote stable pre-release builds to production (no prefix) after thorough testing
