@@ -63,14 +63,16 @@ runs:
       uses: reecetech/version-increment@2024.4.3
       id: version
       with:
+        release_branch: main
         increment: ${{ inputs.version_increment }}
-        tag_prefix: ${{ inputs.deploy_env == 'prod' && '' || (inputs.deploy_env == 'staging' && 'pre-' || 'dev-') }}
+        tag_prefix: ${{ inputs.deploy_env == 'prod' && '' || (inputs.deploy_env == 'staging' && 'pre-' || 'dev') }}
 
     - name: Get Git commit and build date
       id: git_info
       shell: bash
       run: |
         echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        echo "GIT_COMMIT_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
 
     - name: Define IMAGE_FULL_NAME and IMAGE_TAG
@@ -79,7 +81,20 @@ runs:
       run: |
         echo "IMAGE_FULL_NAME=${{ inputs.registry }}/${{ inputs.org_name }}/${{ inputs.image_name }}" >> $GITHUB_OUTPUT
         
-        echo "IMAGE_TAG=v${{ steps.version.outputs.prefixed-version }}" >> $GITHUB_OUTPUT
+        # Set the appropriate tag based on deploy_env
+        if [[ "${{ inputs.deploy_env }}" == "prod" ]]; then
+          # For production: v1.0.0
+          echo "IMAGE_TAG=v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_LATEST=latest" >> $GITHUB_OUTPUT
+        elif [[ "${{ inputs.deploy_env }}" == "staging" ]]; then
+          # For staging: pre-v1.0.0-COMMIT_HASH
+          echo "IMAGE_TAG=pre-v${{ steps.version.outputs.version }}-${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_LATEST=stag-latest" >> $GITHUB_OUTPUT
+        else
+          # For dev: dev-v1.0.0-COMMIT_HASH
+          echo "IMAGE_TAG=dev-v${{ steps.version.outputs.version }}-${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_LATEST=dev-latest" >> $GITHUB_OUTPUT
+        fi
 
     - name: Log in to the Container registry
       uses: docker/login-action@v3
@@ -98,7 +113,7 @@ runs:
         images: ${{ steps.image_info.outputs.IMAGE_FULL_NAME }}
         tags: |
           type=raw,value=${{ steps.image_info.outputs.IMAGE_TAG }}
-          type=raw,value=${{ inputs.deploy_env == 'prod' && 'latest' || (inputs.deploy_env == 'staging' && 'stag-latest') || 'dev-latest' }}
+          type=raw,value=${{ steps.image_info.outputs.IMAGE_LATEST }}
         labels: |
           org.opencontainers.image.title=${{ inputs.image_title }}
           org.opencontainers.image.description=${{ inputs.image_description }}
