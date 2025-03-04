@@ -87,8 +87,8 @@ runs:
           echo "IMAGE_TAG=v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=latest" >> $GITHUB_OUTPUT
         elif [[ "${{ inputs.deploy_env }}" == "staging" ]]; then
-          # For staging: v1.0.0-stag.COMMIT_HASH
-          echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-stag.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
+          # For staging: v1.0.0-pre.COMMIT_HASH
+          echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-pre.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=stag-latest" >> $GITHUB_OUTPUT
         else
           # For dev: v1.0.0-dev.COMMIT_HASH
