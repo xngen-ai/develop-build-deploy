@@ -87,12 +87,12 @@ runs:
           echo "IMAGE_TAG=v${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=latest" >> $GITHUB_OUTPUT
         elif [[ "${{ inputs.deploy_env }}" == "staging" ]]; then
-          # For staging: pre-v1.0.0-COMMIT_HASH
-          echo "IMAGE_TAG=pre-v${{ steps.version.outputs.version }}-${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
+          # For staging: v1.0.0-stag.COMMIT_HASH
+          echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-stag.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=stag-latest" >> $GITHUB_OUTPUT
         else
-          # For dev: dev-v1.0.0-COMMIT_HASH
-          echo "IMAGE_TAG=dev-v${{ steps.version.outputs.version }}-${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
+          # For dev: v1.0.0-dev.COMMIT_HASH
+          echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-dev.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=dev-latest" >> $GITHUB_OUTPUT
         fi
 

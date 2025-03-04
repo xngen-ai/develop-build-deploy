@@ -229,8 +229,8 @@ CMD ["npm", "start"]
 - The workflow can be triggered either by pushing to main/develop branches or manually through the GitHub Actions UI
 - The container image will be available at: `ghcr.io/my-organization/my-backend-app:<tag>` where `<tag>` depends on the `deploy_env` input
 - Tagging strategy by environment:
-  - Development (`deploy_env: 'dev'`): `dev-v1.0.0-COMMIT_HASH` and `dev-latest`
-  - Staging (`deploy_env: 'staging'`): `pre-v1.0.0-COMMIT_HASH` and `stag-latest`
+  - Development (`deploy_env: 'dev'`): `v1.0.0-dev.COMMIT_HASH` and `dev-latest`
+  - Staging (`deploy_env: 'staging'`): `v1.0.0-stag.COMMIT_HASH` and `stag-latest`
   - Production (`deploy_env: 'prod'`): `v1.0.0` and `latest`
 - Development and staging tags include the short Git commit hash for better traceability
 
