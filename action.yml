@@ -90,10 +90,16 @@ runs:
           # For staging: v1.0.0-pre.COMMIT_HASH
           echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-pre.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=stag-latest" >> $GITHUB_OUTPUT
-        else
-          # For dev: v1.0.0-dev.COMMIT_HASH
+        elif [[ "${{ inputs.deploy_env }}" == "develop" ]]; then
+          # For develop: v1.0.0-dev.COMMIT_HASH
           echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-dev.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
           echo "IMAGE_LATEST=dev-latest" >> $GITHUB_OUTPUT
+        else
+          # For feature branches or custom environments: v1.0.0-XXX.COMMIT_HASH (where XXX is first 3 chars of deploy_env)
+          # Convert to lowercase and take first 3 characters
+          ENV_TAG=$(echo "${{ inputs.deploy_env }}" | tr '[:upper:]' '[:lower:]' | cut -c1-3)
+          echo "IMAGE_TAG=v${{ steps.version.outputs.version }}-${ENV_TAG}.${{ steps.git_info.outputs.GIT_COMMIT_SHORT }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_LATEST=${ENV_TAG}-latest" >> $GITHUB_OUTPUT
         fi
 
     - name: Log in to the Container registry
